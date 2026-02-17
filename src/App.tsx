@@ -36,15 +36,27 @@ function Reveal({
       setVisible(true);
       return;
     }
+    const revealIfAlreadyNear = () => {
+      const rect = node.getBoundingClientRect();
+      if (rect.top <= window.innerHeight * 0.92) {
+        setVisible(true);
+        return true;
+      }
+      return false;
+    };
+    if (revealIfAlreadyNear()) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) {
+        const entry = entries[0];
+        if (!entry) return;
+        const crossedRevealLine = entry.boundingClientRect.top <= window.innerHeight * 0.9;
+        if (entry.isIntersecting || entry.intersectionRatio > 0 || crossedRevealLine) {
           setVisible(true);
           observer.disconnect();
         }
       },
-      { threshold: 0.25, rootMargin: "0px 0px -14% 0px" },
+      { threshold: [0, 0.08, 0.18], rootMargin: "0px 0px -8% 0px" },
     );
 
     observer.observe(node);
@@ -109,7 +121,6 @@ export default function App() {
   });
   const capabilityCount = capabilityCards.length;
   const capabilityCardRefs = useRef<Array<HTMLElement | null>>([]);
-  const capabilityVisibilityRef = useRef<number[]>(new Array(capabilityCount).fill(0));
   const capabilityManualUntilRef = useRef(0);
   const fallbackPt = ptRoster[0];
   if (!fallbackPt) return null;
@@ -120,7 +131,7 @@ export default function App() {
   const focusPrevCapability = () => setActiveCapability((current) => (current - 1 + capabilityCount) % capabilityCount);
   const focusNextCapability = () => setActiveCapability((current) => (current + 1) % capabilityCount);
   const setCapabilityFromTap = (index: number) => {
-    capabilityManualUntilRef.current = Date.now() + 2400;
+    capabilityManualUntilRef.current = Date.now() + 1200;
     setActiveCapability(index);
   };
 
@@ -163,65 +174,114 @@ export default function App() {
 
   useEffect(() => {
     if (view !== "landing") return;
-    if (typeof window === "undefined" || !("IntersectionObserver" in window)) return;
+    if (typeof window === "undefined") return;
 
-    capabilityVisibilityRef.current = new Array(capabilityCount).fill(0);
     const mobileQuery = window.matchMedia("(max-width: 767px)");
-    let observer: IntersectionObserver | null = null;
     let frameId = 0;
+    let settleTimer = 0;
+    let fastScrollUntil = 0;
+    let lastScrollY = window.scrollY;
+    let lastScrollAt = performance.now();
+
+    const getVisibleRatio = (rect: DOMRect) => {
+      const viewportTop = 0;
+      const viewportBottom = window.innerHeight;
+      const visiblePx = Math.max(0, Math.min(rect.bottom, viewportBottom) - Math.max(rect.top, viewportTop));
+      return visiblePx / Math.max(rect.height, 1);
+    };
 
     const syncActiveCapability = () => {
+      if (!mobileQuery.matches) return;
       if (Date.now() < capabilityManualUntilRef.current) return;
-      let bestIndex = 0;
-      let bestRatio = 0;
-      capabilityVisibilityRef.current.forEach((ratio, index) => {
-        if (ratio > bestRatio) {
-          bestRatio = ratio;
+      if (performance.now() < fastScrollUntil) return;
+
+      const viewportHeight = window.innerHeight;
+      const focusLine = viewportHeight * 0.46;
+      let bestIndex = -1;
+      let bestVisibility = 0;
+      let bestDistance = Number.POSITIVE_INFINITY;
+
+      capabilityCardRefs.current.forEach((node, index) => {
+        if (!node) return;
+        const rect = node.getBoundingClientRect();
+        const visibility = getVisibleRatio(rect);
+        if (visibility <= 0.01) return;
+
+        const center = rect.top + rect.height / 2;
+        const distance = Math.abs(center - focusLine);
+        const clearlyMoreVisible = visibility > bestVisibility + 0.03;
+        const visibilityTie = Math.abs(visibility - bestVisibility) <= 0.03;
+        if (clearlyMoreVisible || (visibilityTie && distance < bestDistance)) {
           bestIndex = index;
+          bestVisibility = visibility;
+          bestDistance = distance;
         }
       });
-      if (bestRatio <= 0) return;
+
+      if (bestIndex < 0) return;
+
       setActiveCapability((current) => {
         if (current === bestIndex) return current;
-        const currentRatio = capabilityVisibilityRef.current[current] ?? 0;
-        const clearWinner = bestRatio >= currentRatio + 0.18;
-        const currentMostlyGone = currentRatio < 0.16 && bestRatio > 0.18;
-        return clearWinner || currentMostlyGone ? bestIndex : current;
+        const currentNode = capabilityCardRefs.current[current];
+        if (!currentNode) return bestIndex;
+
+        const currentRect = currentNode.getBoundingClientRect();
+        const currentVisibility = getVisibleRatio(currentRect);
+        const currentDistance = Math.abs(currentRect.top + currentRect.height / 2 - focusLine);
+        const visibilityLead = bestVisibility - currentVisibility;
+        const distanceLead = currentDistance - bestDistance;
+        const shouldSwitch = visibilityLead > 0.12 || distanceLead > 38 || currentVisibility < 0.16;
+        return shouldSwitch ? bestIndex : current;
       });
     };
 
-    const observeForMobile = () => {
-      if (observer) observer.disconnect();
-      if (!mobileQuery.matches) return;
-      observer = new IntersectionObserver(
-        (entries) => {
-          for (const entry of entries) {
-            const node = entry.target as HTMLElement;
-            const index = Number(node.dataset.capIndex);
-            if (!Number.isNaN(index)) {
-              capabilityVisibilityRef.current[index] = entry.isIntersecting ? entry.intersectionRatio : 0;
-            }
-          }
-          if (frameId) return;
-          frameId = window.requestAnimationFrame(() => {
-            frameId = 0;
-            syncActiveCapability();
-          });
-        },
-        { threshold: [0.22, 0.48, 0.72], rootMargin: "-10% 0px -36% 0px" },
-      );
-      capabilityCardRefs.current.forEach((node) => node && observer?.observe(node));
+    const queueSync = () => {
+      if (frameId) return;
+      frameId = window.requestAnimationFrame(() => {
+        frameId = 0;
+        syncActiveCapability();
+      });
     };
 
-    observeForMobile();
-    const handleViewportChange = () => observeForMobile();
+    const onScroll = () => {
+      if (!mobileQuery.matches) return;
+      const now = performance.now();
+      const delta = Math.abs(window.scrollY - lastScrollY);
+      const elapsed = Math.max(now - lastScrollAt, 1);
+      const velocity = delta / elapsed;
+      lastScrollY = window.scrollY;
+      lastScrollAt = now;
+
+      if (velocity > 1.2) {
+        fastScrollUntil = now + 120;
+      }
+      if (settleTimer) window.clearTimeout(settleTimer);
+      settleTimer = window.setTimeout(() => {
+        fastScrollUntil = 0;
+        queueSync();
+      }, 90);
+      queueSync();
+    };
+
+    const handleViewportChange = () => {
+      lastScrollY = window.scrollY;
+      lastScrollAt = performance.now();
+      queueSync();
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", handleViewportChange);
     mobileQuery.addEventListener("change", handleViewportChange);
+    queueSync();
+
     return () => {
-      observer?.disconnect();
       if (frameId) window.cancelAnimationFrame(frameId);
+      if (settleTimer) window.clearTimeout(settleTimer);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", handleViewportChange);
       mobileQuery.removeEventListener("change", handleViewportChange);
     };
-  }, [capabilityCount, view]);
+  }, [view]);
 
   /* ── Demo views wrapped in DemoShell ─────────────────────────── */
 

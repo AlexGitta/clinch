@@ -294,10 +294,10 @@ body {
   opacity: 1;
   overflow: hidden;
   transition:
-    max-height 360ms ease,
-    margin-top 360ms ease,
-    opacity 360ms ease,
-    visibility 360ms ease;
+    max-height 560ms cubic-bezier(0.22, 0.74, 0.28, 1),
+    margin-top 560ms cubic-bezier(0.22, 0.74, 0.28, 1),
+    opacity 420ms ease,
+    visibility 420ms ease;
 }
 
 .capability-rail {
@@ -399,19 +399,21 @@ body {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+    overflow-anchor: none;
   }
 
   .capability-card {
     position: relative;
     height: 10.5rem;
     overflow: hidden;
-    will-change: height, transform;
+    backface-visibility: hidden;
+    will-change: height, transform, box-shadow;
     contain: layout paint;
     transition:
-      height 260ms cubic-bezier(0.22, 0.61, 0.36, 1),
-      transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1),
-      box-shadow 220ms cubic-bezier(0.22, 0.61, 0.36, 1),
-      border-color 220ms ease;
+      height 480ms cubic-bezier(0.2, 0.72, 0.22, 1),
+      transform 360ms cubic-bezier(0.22, 0.66, 0.3, 1),
+      box-shadow 360ms cubic-bezier(0.22, 0.66, 0.3, 1),
+      border-color 360ms ease;
   }
 
   .capability-card.is-active {
@@ -443,11 +445,11 @@ body {
     right: 1.25rem;
     bottom: 1.25rem;
     opacity: 0;
-    transform: translate3d(0, 11px, 0) scaleY(0.84);
+    transform: translate3d(0, 14px, 0) scaleY(0.82);
     transform-origin: bottom center;
     transition:
-      transform 210ms cubic-bezier(0.2, 0.7, 0.2, 1),
-      opacity 170ms ease;
+      transform 340ms cubic-bezier(0.2, 0.72, 0.2, 1),
+      opacity 280ms ease;
     will-change: transform, opacity;
     pointer-events: none;
   }
@@ -455,6 +457,7 @@ body {
   .capability-card.is-active .capability-detail-layer {
     opacity: 1;
     transform: translate3d(0, 0, 0) scaleY(1);
+    transition-delay: 70ms, 45ms;
     pointer-events: auto;
   }
 
