@@ -338,13 +338,15 @@ export default function App() {
                   }}
                 >
                   <h3 className="text-base font-black uppercase leading-tight text-[var(--ink)]">{item.title}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-[var(--ink-muted)]">{item.description}</p>
-                  <p className="capability-outcome mt-3 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">{item.outcome}</p>
-                  <ul className="capability-points mt-3 space-y-2 text-sm text-[var(--ink-muted)]">
-                    {item.points.map((point) => (
-                      <li key={point} className="rounded-md border border-[var(--line)] bg-[var(--card)] px-3 py-2">{point}</li>
-                    ))}
-                  </ul>
+                  <p className="capability-description mt-3 text-sm leading-relaxed text-[var(--ink-muted)]">{item.description}</p>
+                  <div className="capability-detail-layer">
+                    <p className="capability-outcome mt-3 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--ink-soft)]">{item.outcome}</p>
+                    <ul className="capability-points mt-3 space-y-2 text-sm text-[var(--ink-muted)]">
+                      {item.points.map((point) => (
+                        <li key={point} className="rounded-md border border-[var(--line)] bg-[var(--card)] px-3 py-2">{point}</li>
+                      ))}
+                    </ul>
+                  </div>
                 </article>
               ))}
             </div>
