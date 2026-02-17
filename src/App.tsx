@@ -3,235 +3,19 @@ import heroImage from "../fistbump.png";
 import capabilitiesBackdrop from "../pullup.png";
 import DemoSelector from "./pages/DemoSelector";
 import OwnerDashboard from "./pages/OwnerDashboard";
-import PtDashboard from "./pages/PtDashboard";
-import type { AppView, PtId, PtProfile, WeeklyClass } from "./types/demo";
-
-const capabilityCards = [
-  {
-    title: "Recurring Billing",
-    description: "Collect memberships on schedule with automated renewals and payment recovery.",
-    outcome: "Predictable monthly revenue and less manual chasing.",
-    points: [
-      "Recurring direct debit subscriptions",
-      "Automatic retry for failed renewals",
-      "Transparent billing history for members and staff",
-    ],
-  },
-  {
-    title: "Flexible Membership Tiers",
-    description: "Create plan rules that match your gym without repeated admin work.",
-    outcome: "Fit plans to different clients and improve retention.",
-    points: [
-      "Plans for capped classes, unlimited access, kids-only, and more",
-      "Class-type and time access controls",
-      "Simple plan management from one dashboard",
-    ],
-  },
-  {
-    title: "PT Profiles and Schedules",
-    description: "Give coaches clear profiles and bookable availability linked to your gym.",
-    outcome: "More PT visibility, stronger credibility, and better booking conversion.",
-    points: [
-      "Coach bio, experience, and profile presence",
-      "Weekly and one-off availability windows",
-      "Gym-linked profiles members can trust",
-    ],
-  },
-  {
-    title: "Offers and Promotions",
-    description: "Launch targeted offers to drive signups and convert trial interest.",
-    outcome: "Convert lookers to bookers with less admin.",
-    points: [
-      "Discount codes for campaigns and seasonal pushes",
-      "Trial sessions and first-class offers",
-      "First-month discounts that transition to recurring plans",
-    ],
-  },
-];
-
-const withoutClinch = [
-  {
-    title: "Revenue loss from manual billing",
-    body: "Missing payments and pay-on-attendance make monthly income inconsistent.",
-  },
-  {
-    title: "No central member data hub",
-    body: "Billing, attendance, and records are scattered across tools and hard to manage.",
-  },
-  {
-    title: "PTs struggle for visibility and bookings",
-    body: "Coaches market manually with no clear schedule visibility or reliable booking flow.",
-  },
-];
-
-const withClinch = [
-  {
-    title: "Predictable recurring revenue",
-    body: "Automated recurring billing and retries keep memberships active and monthly collections consistent.",
-  },
-  {
-    title: "One source of truth for members",
-    body: "Billing, attendance, and profiles live in one place so staff can act quickly and accurately.",
-  },
-  {
-    title: "PT profiles that drive appointments",
-    body: "Coaches are visible, gym-linked, and bookable with clear schedules and stronger credibility.",
-  },
-];
-
-const ownerMetrics = [
-  { label: "Active memberships", value: "184", note: "+6 this month" },
-  { label: "Monthly recurring revenue", value: "GBP 12,480", note: "Projected +8.4%" },
-  { label: "Class occupancy", value: "86%", note: "Week average" },
-  { label: "Outstanding invoices", value: "9", note: "4 high priority" },
-  { label: "PT utilization", value: "74%", note: "+5 pts vs last week" },
-  { label: "7-day check-ins", value: "1,142", note: "+11% week over week" },
-];
-
-const membershipBreakdown = [
-  { name: "Unlimited", count: 72, percent: 39 },
-  { name: "12 Classes / Month", count: 58, percent: 31 },
-  { name: "Kids Only", count: 34, percent: 18 },
-  { name: "PT Bundle", count: 20, percent: 12 },
-];
-
-const weekDays = [
-  { short: "Mon", long: "Monday", date: "16" },
-  { short: "Tue", long: "Tuesday", date: "17" },
-  { short: "Wed", long: "Wednesday", date: "18" },
-  { short: "Thu", long: "Thursday", date: "19" },
-  { short: "Fri", long: "Friday", date: "20" },
-  { short: "Sat", long: "Saturday", date: "21" },
-  { short: "Sun", long: "Sunday", date: "22" },
-];
-
-const weeklyClasses: WeeklyClass[] = [
-  { id: "mon-mt-fund-1800", day: 0, start: "18:00", end: "19:00", title: "Muay Thai Fundamentals", coach: "Coach Amir", booked: 18, capacity: 24, room: "Main Floor" },
-  { id: "mon-mt-adv-1900", day: 0, start: "19:00", end: "20:00", title: "Muay Thai Advanced", coach: "Coach Amir", booked: 15, capacity: 20, room: "Main Floor" },
-  { id: "mon-mma-0900", day: 0, start: "09:00", end: "10:00", title: "MMA Morning Session", coach: "Coach Ellis", booked: 11, capacity: 16, room: "Cage Room" },
-  { id: "mon-kids-1630", day: 0, start: "16:30", end: "17:30", title: "Kids Class", coach: "Coach Mara", booked: 14, capacity: 18, room: "Kids Studio" },
-  { id: "mon-bjj-fund-1800", day: 0, start: "18:00", end: "19:00", title: "BJJ Fundamentals", coach: "Coach Ari", booked: 20, capacity: 24, room: "Mat Room B" },
-  { id: "mon-bjj-adv-1900", day: 0, start: "19:00", end: "20:00", title: "BJJ Advanced", coach: "Coach Ari", booked: 17, capacity: 20, room: "Mat Room B" },
-
-  { id: "tue-mt-fund-1800", day: 1, start: "18:00", end: "19:00", title: "Muay Thai Fundamentals", coach: "Coach Amir", booked: 17, capacity: 24, room: "Main Floor" },
-  { id: "tue-mt-adv-1900", day: 1, start: "19:00", end: "20:00", title: "Muay Thai Advanced", coach: "Coach Amir", booked: 16, capacity: 20, room: "Main Floor" },
-  { id: "tue-sc-0800", day: 1, start: "08:00", end: "09:00", title: "S+C", coach: "Coach Ellis", booked: 12, capacity: 16, room: "Strength Zone" },
-  { id: "tue-kids-1630", day: 1, start: "16:30", end: "17:30", title: "Kids Class", coach: "Coach Mara", booked: 15, capacity: 18, room: "Kids Studio" },
-  { id: "tue-bjj-fund-1800", day: 1, start: "18:00", end: "19:00", title: "BJJ Fundamentals", coach: "Coach Ari", booked: 22, capacity: 24, room: "Mat Room B" },
-  { id: "tue-bjj-adv-1900", day: 1, start: "19:00", end: "20:00", title: "BJJ Advanced", coach: "Coach Ari", booked: 18, capacity: 20, room: "Mat Room B" },
-
-  { id: "wed-mt-fund-1800", day: 2, start: "18:00", end: "19:00", title: "Muay Thai Fundamentals", coach: "Coach Amir", booked: 19, capacity: 24, room: "Main Floor" },
-  { id: "wed-mt-adv-1900", day: 2, start: "19:00", end: "20:00", title: "Muay Thai Advanced", coach: "Coach Amir", booked: 14, capacity: 20, room: "Main Floor" },
-  { id: "wed-mma-0900", day: 2, start: "09:00", end: "10:00", title: "MMA Morning Session", coach: "Coach Ellis", booked: 10, capacity: 16, room: "Cage Room" },
-  { id: "wed-kids-1630", day: 2, start: "16:30", end: "17:30", title: "Kids Class", coach: "Coach Mara", booked: 13, capacity: 18, room: "Kids Studio" },
-  { id: "wed-bjj-fund-1800", day: 2, start: "18:00", end: "19:00", title: "BJJ Fundamentals", coach: "Coach Ari", booked: 21, capacity: 24, room: "Mat Room B" },
-  { id: "wed-bjj-adv-1900", day: 2, start: "19:00", end: "20:00", title: "BJJ Advanced", coach: "Coach Ari", booked: 16, capacity: 20, room: "Mat Room B" },
-
-  { id: "thu-mt-fund-1800", day: 3, start: "18:00", end: "19:00", title: "Muay Thai Fundamentals", coach: "Coach Amir", booked: 18, capacity: 24, room: "Main Floor" },
-  { id: "thu-mt-adv-1900", day: 3, start: "19:00", end: "20:00", title: "Muay Thai Advanced", coach: "Coach Amir", booked: 15, capacity: 20, room: "Main Floor" },
-  { id: "thu-sc-0800", day: 3, start: "08:00", end: "09:00", title: "S+C", coach: "Coach Ellis", booked: 14, capacity: 16, room: "Strength Zone" },
-  { id: "thu-kids-1630", day: 3, start: "16:30", end: "17:30", title: "Kids Class", coach: "Coach Mara", booked: 16, capacity: 18, room: "Kids Studio" },
-  { id: "thu-bjj-fund-1800", day: 3, start: "18:00", end: "19:00", title: "BJJ Fundamentals", coach: "Coach Ari", booked: 22, capacity: 24, room: "Mat Room B" },
-  { id: "thu-bjj-adv-1900", day: 3, start: "19:00", end: "20:00", title: "BJJ Advanced", coach: "Coach Ari", booked: 19, capacity: 20, room: "Mat Room B" },
-
-  { id: "fri-kids-1630", day: 4, start: "16:30", end: "17:30", title: "Kids Class", coach: "Coach Mara", booked: 15, capacity: 18, room: "Kids Studio" },
-  { id: "fri-bjj-fund-1800", day: 4, start: "18:00", end: "19:00", title: "BJJ Fundamentals", coach: "Coach Ari", booked: 20, capacity: 24, room: "Mat Room B" },
-  { id: "fri-bjj-adv-1900", day: 4, start: "19:00", end: "20:00", title: "BJJ Advanced", coach: "Coach Ari", booked: 17, capacity: 20, room: "Mat Room B" },
-  { id: "fri-spar-1800", day: 4, start: "18:00", end: "20:00", title: "Muay Thai Sparring", coach: "Coach Amir", booked: 18, capacity: 20, room: "Main Floor" },
-
-  { id: "sat-sc-0900", day: 5, start: "09:00", end: "10:00", title: "S+C", coach: "Coach Ellis", booked: 15, capacity: 18, room: "Strength Zone" },
-
-  { id: "sun-spar-1400", day: 6, start: "12:00", end: "14:00", title: "Muay Thai Sparring", coach: "Coach Amir", booked: 16, capacity: 20, room: "Main Floor" },
-  { id: "sun-sc-1100", day: 6, start: "11:00", end: "12:00", title: "S+C", coach: "Coach Ellis", booked: 12, capacity: 18, room: "Strength Zone" },
-];
-
-const ptRoster: PtProfile[] = [
-  {
-    id: "jess-cole",
-    name: "Jess Cole",
-    coach: "Coach Amir",
-    style: "Striking and fight conditioning",
-    location: "Main Gym Floor",
-    bio: "Specializes in technical Muay Thai progression and safe, structured sparring preparation.",
-    upcoming: ["Mon 13:00-16:00", "Wed 10:00-14:00", "Fri 12:00-16:00"],
-    focus: ["Muay Thai fundamentals", "Advanced striking", "Sparring prep"],
-    stats: [
-      { label: "Active PT clients", value: "19" },
-      { label: "Sessions this week", value: "26" },
-      { label: "Utilization", value: "82%" },
-    ],
-  },
-  {
-    id: "ari-nunes",
-    name: "Ari Nunes",
-    coach: "Coach Ari",
-    style: "No-Gi and takedown defense",
-    location: "Mat Room B",
-    bio: "Runs fundamentals-to-advanced BJJ tracks with a strong focus on positional control and competition readiness.",
-    upcoming: ["Tue 09:00-12:00", "Thu 15:00-19:00", "Sat 10:00-13:00"],
-    focus: ["BJJ fundamentals", "BJJ advanced", "No-gi coaching"],
-    stats: [
-      { label: "Active PT clients", value: "14" },
-      { label: "Sessions this week", value: "21" },
-      { label: "Utilization", value: "76%" },
-    ],
-  },
-  {
-    id: "leah-park",
-    name: "Leah Park",
-    coach: "Coach Mara",
-    style: "Youth development and fundamentals",
-    location: "Kids Program Studio",
-    bio: "Leads youth classes and beginner pathways focused on consistency, confidence, and technical quality.",
-    upcoming: ["Mon 15:00-18:00", "Wed 15:00-18:00", "Sat 09:00-12:00"],
-    focus: ["Kids class curriculum", "Beginner onboarding", "Movement fundamentals"],
-    stats: [
-      { label: "Active PT clients", value: "11" },
-      { label: "Sessions this week", value: "17" },
-      { label: "Utilization", value: "71%" },
-    ],
-  },
-];
-
-function getPtIdFromHash(hash: string): PtId | null {
-  if (!hash.startsWith("#demo-pt-")) return null;
-  const ptId = hash.replace("#demo-pt-", "");
-  const match = ptRoster.find((pt) => pt.id === ptId);
-  return match ? match.id : null;
-}
-
-function getViewFromHash(): AppView {
-  if (typeof window === "undefined") return "landing";
-  const hash = window.location.hash;
-  if (hash === "#demo-select") return "demo-select";
-  if (hash === "#demo-owner") return "demo-owner";
-  if (hash.startsWith("#demo-pt-")) return "demo-pt";
-  if (hash === "#demo-member") return "demo-member";
-  return "landing";
-}
-
-function setHashForView(view: AppView, ptId?: PtId) {
-  if (typeof window === "undefined") return;
-  if (view === "landing") {
-    window.history.replaceState(null, "", window.location.pathname + window.location.search);
-    return;
-  }
-  if (view === "demo-select") {
-    window.location.hash = "demo-select";
-    return;
-  }
-  if (view === "demo-owner") {
-    window.location.hash = "demo-owner";
-    return;
-  }
-  if (view === "demo-pt") {
-    const fallbackPtId = ptRoster[0]?.id;
-    const safePtId = ptId ?? fallbackPtId;
-    if (safePtId) window.location.hash = `demo-pt-${safePtId}`;
-    return;
-  }
-  window.location.hash = "demo-member";
-}
+import PtWorkspace from "./pages/PtWorkspace";
+import MemberPortal from "./pages/MemberPortal";
+import DemoShell from "./components/DemoShell";
+import type { AppView, PtId } from "./types/demo";
+import {
+  capabilityCards,
+  withClinch,
+  withoutClinch,
+  ptRoster,
+  getPtIdFromHash,
+  getViewFromHash,
+  setHashForView,
+} from "./data/demoData";
 
 function Reveal({
   children,
@@ -280,14 +64,10 @@ function Reveal({
 
 function AppHeader({
   theme,
-  compact,
-  demoNav,
   onToggleTheme,
   onNavigate,
 }: {
   theme: "light" | "dark";
-  compact?: boolean;
-  demoNav?: boolean;
   onToggleTheme: () => void;
   onNavigate: (view: AppView) => void;
 }) {
@@ -297,19 +77,10 @@ function AppHeader({
         <button type="button" onClick={() => onNavigate("landing")} className="display text-[2rem] tracking-[0.11em] text-[var(--ink)]">
           CLINCH
         </button>
-        {!compact && (
-          <nav className="hidden items-center gap-8 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-muted)] md:flex">
-            <a href="#capabilities" className="transition-colors hover:text-[var(--ink)]">Capabilities</a>
-            <a href="#footer" className="transition-colors hover:text-[var(--ink)]">Contact</a>
-          </nav>
-        )}
-        {compact && demoNav && (
-          <nav className="hidden items-center gap-6 text-[11px] font-semibold uppercase tracking-[0.14em] text-[var(--ink-muted)] md:flex">
-            <a href="#demo-calendar" className="transition-colors hover:text-[var(--ink)]">Calendar</a>
-            <a href="#demo-insights" className="transition-colors hover:text-[var(--ink)]">Insights</a>
-            <button type="button" onClick={() => onNavigate("demo-select")} className="transition-colors hover:text-[var(--ink)]">Switch view</button>
-          </nav>
-        )}
+        <nav className="hidden items-center gap-8 text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--ink-muted)] md:flex">
+          <a href="#capabilities" className="transition-colors hover:text-[var(--ink)]">Capabilities</a>
+          <a href="#footer" className="transition-colors hover:text-[var(--ink)]">Contact</a>
+        </nav>
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -319,27 +90,14 @@ function AppHeader({
           >
             {theme === "dark" ? "\u2726" : "\u263E"}
           </button>
-          {compact && demoNav && (
-            <button type="button" onClick={() => onNavigate("demo-select")} className="hidden rounded-md border border-[var(--line)] bg-[var(--card)] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--ink)] md:inline-flex">
-              Demo views
-            </button>
-          )}
-          {!compact && (
-            <button className="rounded-md bg-[var(--ink)] px-4 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--surface)] transition hover:bg-[var(--ink-soft)] md:text-xs">
-              Join Beta
-            </button>
-          )}
+          <button className="rounded-md bg-[var(--ink)] px-4 py-2 text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--surface)] transition hover:bg-[var(--ink-soft)] md:text-xs">
+            Join Beta
+          </button>
         </div>
       </div>
     </header>
   );
 }
-
-function toMinutes(time: string) {
-  const [hours, minutes] = time.split(":").map(Number);
-  return hours * 60 + minutes;
-}
-
 
 export default function App() {
   const [activeCapability, setActiveCapability] = useState(0);
@@ -355,6 +113,8 @@ export default function App() {
   const fallbackPt = ptRoster[0];
   if (!fallbackPt) return null;
   const selectedPt = ptRoster.find((pt) => pt.id === selectedPtId) ?? fallbackPt;
+
+  const toggleTheme = () => setTheme((c) => (c === "dark" ? "light" : "dark"));
 
   const focusPrevCapability = () => setActiveCapability((current) => (current - 1 + capabilityCount) % capabilityCount);
   const focusNextCapability = () => setActiveCapability((current) => (current + 1) % capabilityCount);
@@ -448,10 +208,12 @@ export default function App() {
     };
   }, [capabilityCount, view]);
 
+  /* ── Demo views wrapped in DemoShell ─────────────────────────── */
+
   if (view === "demo-select") {
     return (
       <div className="min-h-screen bg-[var(--surface)] text-[var(--ink)]">
-        <AppHeader theme={theme} compact onToggleTheme={() => setTheme((c) => (c === "dark" ? "light" : "dark"))} onNavigate={navigateTo} />
+        <AppHeader theme={theme} onToggleTheme={toggleTheme} onNavigate={navigateTo} />
         <DemoSelector onNavigate={navigateTo} />
       </div>
     );
@@ -459,54 +221,33 @@ export default function App() {
 
   if (view === "demo-owner") {
     return (
-      <div className="min-h-screen bg-[var(--surface)] text-[var(--ink)]">
-        <AppHeader theme={theme} compact demoNav onToggleTheme={() => setTheme((c) => (c === "dark" ? "light" : "dark"))} onNavigate={navigateTo} />
-        <OwnerDashboard
-          onNavigate={navigateTo}
-          onOpenPt={openPtWorkspace}
-          ownerMetrics={ownerMetrics}
-          membershipBreakdown={membershipBreakdown}
-          weekDays={weekDays}
-          weeklyClasses={weeklyClasses}
-          ptRoster={ptRoster}
-          toMinutes={toMinutes}
-        />
-      </div>
+      <DemoShell theme={theme} view={view} onToggleTheme={toggleTheme} onNavigate={navigateTo} lastPtId={selectedPtId}>
+        <OwnerDashboard onOpenPt={openPtWorkspace} />
+      </DemoShell>
     );
   }
 
   if (view === "demo-pt") {
     return (
-      <div className="min-h-screen bg-[var(--surface)] text-[var(--ink)]">
-        <AppHeader theme={theme} compact onToggleTheme={() => setTheme((c) => (c === "dark" ? "light" : "dark"))} onNavigate={navigateTo} />
-        <PtDashboard
-          pt={selectedPt}
-          weekDays={weekDays}
-          weeklyClasses={weeklyClasses}
-          ptRoster={ptRoster}
-          toMinutes={toMinutes}
-          onBack={() => navigateTo("demo-owner")}
-          onOpenPt={openPtWorkspace}
-        />
-      </div>
+      <DemoShell theme={theme} view={view} onToggleTheme={toggleTheme} onNavigate={navigateTo} lastPtId={selectedPtId}>
+        <PtWorkspace pt={selectedPt} onOpenPt={openPtWorkspace} />
+      </DemoShell>
     );
   }
 
   if (view === "demo-member") {
     return (
-      <div className="min-h-screen bg-[var(--surface)] text-[var(--ink)]">
-        <AppHeader theme={theme} compact onToggleTheme={() => setTheme((c) => (c === "dark" ? "light" : "dark"))} onNavigate={navigateTo} />
-        <main className="mx-auto w-full max-w-[960px] px-5 py-14 md:px-8">
-          <h1 className="display text-[2.5rem] uppercase leading-[0.9]">Member view coming next</h1>
-          <p className="mt-4 text-[var(--ink-muted)]">Owner view is ready now. Member flow can be added next.</p>
-        </main>
-      </div>
+      <DemoShell theme={theme} view={view} onToggleTheme={toggleTheme} onNavigate={navigateTo} lastPtId={selectedPtId}>
+        <MemberPortal />
+      </DemoShell>
     );
   }
 
+  /* ── Landing page ────────────────────────────────────────────── */
+
   return (
     <div className="min-h-screen bg-[var(--surface)] text-[var(--ink)]">
-      <AppHeader theme={theme} onToggleTheme={() => setTheme((c) => (c === "dark" ? "light" : "dark"))} onNavigate={navigateTo} />
+      <AppHeader theme={theme} onToggleTheme={toggleTheme} onNavigate={navigateTo} />
       <main>
         <section className="w-full pt-6 md:mx-auto md:max-w-[880px] md:px-8 md:pt-10">
           <Reveal>

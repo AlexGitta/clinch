@@ -1,28 +1,35 @@
-import type { AppView, PtId, PtProfile, WeeklyClass } from "../types/demo";
-
-type OwnerMetric = { label: string; value: string; note: string };
-type MembershipSlice = { name: string; count: number; percent: number };
-type WeekDay = { short: string; long: string; date: string };
-
-export default function OwnerDashboard({
-  onNavigate,
-  onOpenPt,
-  ownerMetrics,
+import { useState } from "react";
+import {
+  invoices,
   membershipBreakdown,
-  weekDays,
-  weeklyClasses,
+  ownerMembersList,
   ptRoster,
   toMinutes,
+  weekDays,
+  weeklyClasses,
+} from "../data/demoData";
+import TabBar from "../components/TabBar";
+import WeeklyCalendar from "../components/WeeklyCalendar";
+import PtProfileCard from "../components/PtProfileCard";
+import Modal from "../components/Modal";
+import type { OwnerMemberRow, OwnerTab, PtId } from "../types/demo";
+
+const ownerTabs: { key: OwnerTab; label: string }[] = [
+  { key: "schedule", label: "Schedule" },
+  { key: "members", label: "Members" },
+  { key: "pts", label: "PTs" },
+  { key: "billing", label: "Billing" },
+];
+
+export default function OwnerDashboard({
+  onOpenPt,
 }: {
-  onNavigate: (view: AppView) => void;
   onOpenPt: (ptId: PtId) => void;
-  ownerMetrics: OwnerMetric[];
-  membershipBreakdown: MembershipSlice[];
-  weekDays: WeekDay[];
-  weeklyClasses: WeeklyClass[];
-  ptRoster: PtProfile[];
-  toMinutes: (time: string) => number;
 }) {
+  const [tab, setTab] = useState<OwnerTab>("schedule");
+  const [selectedMember, setSelectedMember] = useState<OwnerMemberRow | null>(null);
+  const [memberSearch, setMemberSearch] = useState("");
+
   const classesByDay = weekDays.map((_, dayIndex) =>
     weeklyClasses
       .filter((item) => item.day === dayIndex)
@@ -32,118 +39,45 @@ export default function OwnerDashboard({
     (left, right) => toMinutes(left) - toMinutes(right),
   );
 
+  const totalClasses = weeklyClasses.length;
+  const avgOccupancy = Math.round(weeklyClasses.reduce((sum, c) => sum + (c.booked / c.capacity) * 100, 0) / totalClasses);
+  const spotsRemaining = weeklyClasses.reduce((sum, c) => sum + (c.capacity - c.booked), 0);
+
   return (
-    <main className="mx-auto w-full max-w-[1200px] px-4 py-5 md:px-8 md:py-7">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold leading-tight text-[var(--ink)] md:text-[2rem]">Weekly operations overview</h1>
-        <button type="button" onClick={() => onNavigate("demo-select")} className="inline-flex items-center rounded-md border border-[var(--line)] bg-[var(--surface)] px-4 py-2 text-xs font-semibold text-[var(--ink)]">
-          Back to view select
-        </button>
+    <main className="mx-auto w-full max-w-[1280px] px-4 py-5 md:px-8 md:py-7">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold leading-tight text-[var(--ink)] md:text-[2rem]">Southside Combat Gym</h1>
+          <p className="mt-1 text-sm text-[var(--ink-muted)]">Feb 16-22, 2026</p>
+        </div>
       </div>
 
-      <details className="demo-mobile-stats mt-3 rounded-xl border border-[var(--line)] bg-[var(--card)] p-3 md:hidden">
-        <summary className="cursor-pointer list-none text-sm font-semibold text-[var(--ink)] marker:content-none">
-          <span className="inline-flex items-center gap-2">
-            Key stats
-            <span className="text-xs font-medium text-[var(--ink-muted)]">Tap to open</span>
-          </span>
-        </summary>
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          {ownerMetrics.map((metric) => (
-            <article key={metric.label} className="demo-stat-card p-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">{metric.label}</p>
-              <p className="mt-1 text-lg font-semibold text-[var(--ink)]">{metric.value}</p>
-              <p className="mt-1 text-[11px] text-[var(--ink-muted)]">{metric.note}</p>
-            </article>
-          ))}
+      <TabBar tabs={ownerTabs} active={tab} onChange={setTab} />
+
+      {/* ── Schedule tab ────────────────────────────────────────── */}
+      {tab === "schedule" && (
+        <div className="mt-4">
+          <div className="grid gap-2 sm:grid-cols-3">
+            <StatCard label="Total Classes This Week" value={String(totalClasses)} />
+            <StatCard label="Average Occupancy" value={`${avgOccupancy}%`} />
+            <StatCard label="Spots Remaining" value={String(spotsRemaining)} />
+          </div>
+          <div className="mt-4">
+            <WeeklyCalendar weekDays={weekDays} classesByDay={classesByDay} occupiedStartTimes={occupiedStartTimes} />
+          </div>
         </div>
-      </details>
+      )}
 
-      <section className="mt-3 hidden md:block">
-        <div className="grid gap-2 md:grid-cols-3 xl:grid-cols-6">
-          {ownerMetrics.map((metric) => (
-            <article key={metric.label} className="demo-stat-card p-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">{metric.label}</p>
-              <p className="mt-1 text-xl font-semibold leading-tight text-[var(--ink)]">{metric.value}</p>
-              <p className="mt-1 text-xs text-[var(--ink-muted)]">{metric.note}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <div id="demo-calendar" className="mt-3 grid gap-3 xl:grid-cols-[1.35fr_0.65fr]">
-        <section className="rounded-xl border border-[var(--line)] bg-[var(--card)] p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--accent)]">Weekly Class Calendar</p>
-              <p className="mt-1 text-sm text-[var(--ink-muted)]">Template week - repeats each week for core timetable planning.</p>
-            </div>
-            <div className="rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 py-1 text-xs font-medium text-[var(--ink-muted)]">Feb 16-22</div>
+      {/* ── Members tab ─────────────────────────────────────────── */}
+      {tab === "members" && (
+        <div className="mt-4">
+          <div className="grid gap-2 sm:grid-cols-3">
+            <StatCard label="Active Members" value="184" />
+            <StatCard label="New This Month" value="+6" />
+            <StatCard label="Retention Rate" value="94%" />
           </div>
 
-          <div className="mt-3 grid gap-2 md:hidden">
-            {weekDays.map((day, dayIndex) => {
-              const dayClasses = classesByDay[dayIndex] ?? [];
-              if (dayClasses.length === 0) return null;
-              return (
-                <article key={`mobile-${day.short}`} className="rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">{day.long}</p>
-                    <p className="text-xs text-[var(--ink-muted)]">Feb {day.date}</p>
-                  </div>
-                  <div className="mt-2 space-y-1.5">
-                    {dayClasses.map((item) => (
-                      <div key={`mobile-${item.id}`} className="rounded-md border border-[var(--line)] bg-[var(--card)] px-2 py-1.5">
-                        <p className="text-sm font-semibold leading-tight text-[var(--ink)]">{item.title}</p>
-                        <p className="mt-0.5 text-xs text-[var(--ink-muted)]">{item.start}-{item.end} · {item.coach}</p>
-                      </div>
-                    ))}
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-
-          <div className="demo-calendar-shell mt-3 hidden md:block">
-            <table className="demo-calendar-table">
-              <thead>
-                <tr>
-                  <th className="demo-calendar-head-time">Time</th>
-                  {weekDays.map((day) => (
-                    <th key={day.short} className="demo-calendar-head-day">
-                      <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">{day.short}</p>
-                      <p className="mt-1 text-xs font-semibold text-[var(--ink)]">Feb {day.date}</p>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {occupiedStartTimes.map((time) => (
-                  <tr key={time}>
-                    <th className="demo-calendar-time-cell">{time}</th>
-                    {weekDays.map((day, dayIndex) => {
-                      const entries = (classesByDay[dayIndex] ?? []).filter((item) => item.start === time);
-                      return (
-                        <td key={`${day.short}-${time}`} className="demo-calendar-slot-cell">
-                          {entries.map((item) => (
-                            <article key={item.id} className="demo-calendar-event">
-                              <p className="demo-calendar-event-title">{item.title}</p>
-                              <p className="demo-calendar-event-meta">{item.start}-{item.end}</p>
-                              <p className="demo-calendar-event-status">{item.coach}</p>
-                            </article>
-                          ))}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <div id="demo-insights" className="space-y-3">
-          <section className="rounded-xl border border-[var(--line)] bg-[var(--card)] p-4">
+          <section className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--card)] p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--accent)]">Membership Mix</p>
             <div className="mt-3 space-y-3">
               {membershipBreakdown.map((item) => (
@@ -160,26 +94,208 @@ export default function OwnerDashboard({
             </div>
           </section>
 
-          <section className="rounded-xl border border-[var(--line)] bg-[var(--card)] p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--accent)]">PT Coverage</p>
-            <div className="mt-3 space-y-2 text-xs text-[var(--ink-muted)]">
-              {ptRoster.map((pt) => (
-                <button
-                  key={`coverage-${pt.id}`}
-                  type="button"
-                  onClick={() => onOpenPt(pt.id)}
-                  className="w-full rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-left transition hover:border-[var(--ink-muted)]"
-                >
-                  <p className="font-semibold text-[var(--ink)]">{pt.name}</p>
-                  <p className="mt-0.5">{pt.upcoming[0]}</p>
-                  <p className="mt-1 text-[11px] uppercase tracking-[0.07em] text-[var(--ink-muted)]">Open PT workspace</p>
-                </button>
-              ))}
-            </div>
-          </section>
+          <input
+            type="text"
+            value={memberSearch}
+            onChange={(e) => setMemberSearch(e.target.value)}
+            placeholder="Search members..."
+            className="mt-4 w-full rounded-lg border border-[var(--line)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--ink-muted)] outline-none focus:border-[var(--accent)]"
+          />
+
+          {/* Desktop table */}
+          <div className="mt-4 hidden overflow-hidden rounded-xl border border-[var(--line)] md:block">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[var(--line)] bg-[var(--surface)]">
+                  <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">Name</th>
+                  <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">Tier</th>
+                  <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">Joined</th>
+                  <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">Status</th>
+                  <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">Last Check-in</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ownerMembersList.filter((m) => {
+                  if (!memberSearch.trim()) return true;
+                  const q = memberSearch.toLowerCase();
+                  return m.name.toLowerCase().includes(q) || m.tier.toLowerCase().includes(q) || m.email.toLowerCase().includes(q);
+                }).map((m) => (
+                  <tr key={m.id} className="cursor-pointer border-b border-[var(--line)] last:border-b-0 hover:bg-[var(--surface)]" onClick={() => setSelectedMember(m)}>
+                    <td className="px-4 py-2.5 font-medium text-[var(--ink)]">{m.name}</td>
+                    <td className="px-4 py-2.5 text-[var(--ink-muted)]">{m.tier}</td>
+                    <td className="px-4 py-2.5 text-[var(--ink-muted)]">{m.joined}</td>
+                    <td className="px-4 py-2.5"><StatusBadge status={m.status} /></td>
+                    <td className="px-4 py-2.5 text-[var(--ink-muted)]">{m.lastCheckin}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="mt-4 grid gap-2 md:hidden">
+            {ownerMembersList.filter((m) => {
+              if (!memberSearch.trim()) return true;
+              const q = memberSearch.toLowerCase();
+              return m.name.toLowerCase().includes(q) || m.tier.toLowerCase().includes(q) || m.email.toLowerCase().includes(q);
+            }).map((m) => (
+              <article key={m.id} className="cursor-pointer rounded-lg border border-[var(--line)] bg-[var(--card)] p-3 hover:bg-[var(--surface)]" onClick={() => setSelectedMember(m)}>
+                <div className="flex items-center justify-between">
+                  <p className="font-medium text-[var(--ink)]">{m.name}</p>
+                  <StatusBadge status={m.status} />
+                </div>
+                <p className="mt-1 text-xs text-[var(--ink-muted)]">{m.tier} · Joined {m.joined} · Last: {m.lastCheckin}</p>
+              </article>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* ── PTs tab ─────────────────────────────────────────────── */}
+      {tab === "pts" && (
+        <div className="mt-4">
+          <div className="grid gap-2 sm:grid-cols-2">
+            <StatCard label="Active PTs" value="3" />
+            <StatCard label="Avg Utilization" value="76%" />
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {ptRoster.map((pt) => (
+              <PtProfileCard key={pt.id} pt={pt} actionLabel="Open Workspace" onAction={() => onOpenPt(pt.id)} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Billing tab ─────────────────────────────────────────── */}
+      {tab === "billing" && (
+        <div className="mt-4">
+          <div className="grid gap-2 sm:grid-cols-3">
+            <StatCard label="MRR" value="GBP 12,480" />
+            <StatCard label="Outstanding" value="9" />
+            <StatCard label="Collection Rate" value="97.2%" />
+          </div>
+
+          {/* Desktop table */}
+          <div className="mt-4 hidden overflow-hidden rounded-xl border border-[var(--line)] md:block">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[var(--line)] bg-[var(--surface)]">
+                  <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">Member</th>
+                  <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">Amount</th>
+                  <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">Tier</th>
+                  <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">Date</th>
+                  <th className="px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invoices.map((inv) => (
+                  <tr key={inv.id} className="border-b border-[var(--line)] last:border-b-0">
+                    <td className="px-4 py-2.5 font-medium text-[var(--ink)]">{inv.memberName}</td>
+                    <td className="px-4 py-2.5 text-[var(--ink-muted)]">GBP {inv.amount}</td>
+                    <td className="px-4 py-2.5 text-[var(--ink-muted)]">{inv.tier}</td>
+                    <td className="px-4 py-2.5 text-[var(--ink-muted)]">{inv.date}</td>
+                    <td className="px-4 py-2.5"><InvoiceBadge status={inv.status} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="mt-4 grid gap-2 md:hidden">
+            {invoices.map((inv) => (
+              <article key={inv.id} className="rounded-lg border border-[var(--line)] bg-[var(--card)] p-3">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium text-[var(--ink)]">{inv.memberName}</p>
+                  <InvoiceBadge status={inv.status} />
+                </div>
+                <p className="mt-1 text-xs text-[var(--ink-muted)]">GBP {inv.amount} · {inv.tier} · {inv.date}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      )}
+      <Modal
+        open={!!selectedMember}
+        onClose={() => setSelectedMember(null)}
+        title="Member Details"
+        actions={
+          <button type="button" onClick={() => setSelectedMember(null)} className="rounded-md border border-[var(--line)] px-4 py-2 text-xs font-semibold text-[var(--ink)]">Close</button>
+        }
+      >
+        {selectedMember && (() => {
+          const initials = selectedMember.name.split(" ").map((w) => w[0]).join("").toUpperCase();
+          return (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[var(--accent)] text-base font-bold text-white">{initials}</div>
+                <div>
+                  <p className="text-base font-semibold text-[var(--ink)]">{selectedMember.name}</p>
+                  <p className="text-xs text-[var(--ink-muted)]">{selectedMember.email}</p>
+                </div>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <div className="rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">Tier</p>
+                  <p className="mt-0.5 text-sm font-semibold text-[var(--ink)]">{selectedMember.tier}</p>
+                </div>
+                <div className="rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">Monthly Fee</p>
+                  <p className="mt-0.5 text-sm font-semibold text-[var(--ink)]">GBP {selectedMember.monthlyFee}</p>
+                </div>
+                <div className="rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">Status</p>
+                  <p className="mt-0.5"><StatusBadge status={selectedMember.status} /></p>
+                </div>
+                <div className="rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">Joined</p>
+                  <p className="mt-0.5 text-sm font-semibold text-[var(--ink)]">{selectedMember.joined}</p>
+                </div>
+                <div className="rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2 sm:col-span-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">Last Check-in</p>
+                  <p className="mt-0.5 text-sm font-semibold text-[var(--ink)]">{selectedMember.lastCheckin}</p>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+      </Modal>
     </main>
   );
 }
 
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <article className="demo-stat-card p-3">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">{label}</p>
+      <p className="mt-1 text-xl font-semibold text-[var(--ink)]">{value}</p>
+    </article>
+  );
+}
+
+function StatusBadge({ status }: { status: "active" | "overdue" | "cancelled" }) {
+  const styles = {
+    active: "bg-green-500/10 text-green-600",
+    overdue: "bg-amber-500/10 text-amber-600",
+    cancelled: "bg-neutral-500/10 text-neutral-500",
+  };
+  return (
+    <span className={`rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] ${styles[status]}`}>
+      {status}
+    </span>
+  );
+}
+
+function InvoiceBadge({ status }: { status: "paid" | "pending" | "overdue" | "failed" }) {
+  const styles = {
+    paid: "bg-green-500/10 text-green-600",
+    pending: "bg-yellow-500/10 text-yellow-600",
+    overdue: "bg-red-500/10 text-red-600",
+    failed: "bg-red-500/10 text-red-600",
+  };
+  return (
+    <span className={`rounded-md px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] ${styles[status]}`}>
+      {status}
+    </span>
+  );
+}
