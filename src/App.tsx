@@ -110,6 +110,7 @@ export default function App() {
   const capabilityCount = capabilityCards.length;
   const capabilityCardRefs = useRef<Array<HTMLElement | null>>([]);
   const capabilityVisibilityRef = useRef<number[]>(new Array(capabilityCount).fill(0));
+  const capabilityManualUntilRef = useRef(0);
   const fallbackPt = ptRoster[0];
   if (!fallbackPt) return null;
   const selectedPt = ptRoster.find((pt) => pt.id === selectedPtId) ?? fallbackPt;
@@ -118,6 +119,10 @@ export default function App() {
 
   const focusPrevCapability = () => setActiveCapability((current) => (current - 1 + capabilityCount) % capabilityCount);
   const focusNextCapability = () => setActiveCapability((current) => (current + 1) % capabilityCount);
+  const setCapabilityFromTap = (index: number) => {
+    capabilityManualUntilRef.current = Date.now() + 2400;
+    setActiveCapability(index);
+  };
 
   const navigateTo = (nextView: AppView, options?: { ptId?: PtId }) => {
     if (options?.ptId) setSelectedPtId(options.ptId);
@@ -163,6 +168,27 @@ export default function App() {
     capabilityVisibilityRef.current = new Array(capabilityCount).fill(0);
     const mobileQuery = window.matchMedia("(max-width: 767px)");
     let observer: IntersectionObserver | null = null;
+    let frameId = 0;
+
+    const syncActiveCapability = () => {
+      if (Date.now() < capabilityManualUntilRef.current) return;
+      let bestIndex = 0;
+      let bestRatio = 0;
+      capabilityVisibilityRef.current.forEach((ratio, index) => {
+        if (ratio > bestRatio) {
+          bestRatio = ratio;
+          bestIndex = index;
+        }
+      });
+      if (bestRatio <= 0) return;
+      setActiveCapability((current) => {
+        if (current === bestIndex) return current;
+        const currentRatio = capabilityVisibilityRef.current[current] ?? 0;
+        const clearWinner = bestRatio >= currentRatio + 0.18;
+        const currentMostlyGone = currentRatio < 0.16 && bestRatio > 0.18;
+        return clearWinner || currentMostlyGone ? bestIndex : current;
+      });
+    };
 
     const observeForMobile = () => {
       if (observer) observer.disconnect();
@@ -176,25 +202,13 @@ export default function App() {
               capabilityVisibilityRef.current[index] = entry.isIntersecting ? entry.intersectionRatio : 0;
             }
           }
-          let bestIndex = 0;
-          let bestRatio = 0;
-          capabilityVisibilityRef.current.forEach((ratio, index) => {
-            if (ratio > bestRatio) {
-              bestRatio = ratio;
-              bestIndex = index;
-            }
+          if (frameId) return;
+          frameId = window.requestAnimationFrame(() => {
+            frameId = 0;
+            syncActiveCapability();
           });
-          if (bestRatio > 0) {
-            setActiveCapability((current) => {
-              if (current === bestIndex) return current;
-              const currentRatio = capabilityVisibilityRef.current[current] ?? 0;
-              const clearWinner = bestRatio >= currentRatio + 0.12;
-              const currentMostlyGone = currentRatio < 0.2 && bestRatio > 0.2;
-              return clearWinner || currentMostlyGone ? bestIndex : current;
-            });
-          }
         },
-        { threshold: [0.15, 0.3, 0.45, 0.6, 0.75], rootMargin: "-12% 0px -38% 0px" },
+        { threshold: [0.22, 0.48, 0.72], rootMargin: "-10% 0px -36% 0px" },
       );
       capabilityCardRefs.current.forEach((node) => node && observer?.observe(node));
     };
@@ -204,6 +218,7 @@ export default function App() {
     mobileQuery.addEventListener("change", handleViewportChange);
     return () => {
       observer?.disconnect();
+      if (frameId) window.cancelAnimationFrame(frameId);
       mobileQuery.removeEventListener("change", handleViewportChange);
     };
   }, [capabilityCount, view]);
@@ -262,7 +277,7 @@ export default function App() {
                   </div>
                 </div>
               </div>
-              <div className="absolute bottom-[5%] left-1/2 z-[60] -translate-x-1/2">
+              <div className="absolute bottom-[8%] left-1/2 z-[60] -translate-x-1/2 md:bottom-[9%]">
                 <button
                   type="button"
                   onClick={() => navigateTo("demo-select")}
@@ -310,15 +325,15 @@ export default function App() {
                   data-cap-index={idx}
                   ref={(node) => { capabilityCardRefs.current[idx] = node; }}
                   onMouseEnter={() => setActiveCapability(idx)}
-                  onFocus={() => setActiveCapability(idx)}
-                  onClick={() => setActiveCapability(idx)}
+                  onFocus={() => setCapabilityFromTap(idx)}
+                  onClick={() => setCapabilityFromTap(idx)}
                   role="button"
                   tabIndex={0}
                   aria-pressed={idx === activeCapability}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" || event.key === " ") {
                       event.preventDefault();
-                      setActiveCapability(idx);
+                      setCapabilityFromTap(idx);
                     }
                   }}
                 >
@@ -339,7 +354,7 @@ export default function App() {
         <section className="mx-auto w-full max-w-[880px] px-5 pb-12 pt-10 md:px-8 md:pb-16 md:pt-12">
           <div className="md:hidden">
             <Reveal delay={220}><p className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--ink-muted)]">Swipe to compare</p></Reveal>
-            <div className="mobile-compare-track mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
+            <div className="mobile-compare-track mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto overflow-y-hidden pb-2">
               <Reveal className="mobile-compare-panel min-w-full snap-start" delay={260}>
                 <section className="rounded-xl border border-[var(--line)] bg-[var(--surface-strong)] p-4">
                   <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--with-accent)]">With Clinch Booking :</p>

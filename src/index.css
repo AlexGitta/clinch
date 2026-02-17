@@ -383,11 +383,36 @@ body {
 
 .mobile-compare-track {
   -webkit-overflow-scrolling: touch;
+  overflow-y: hidden;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+  overscroll-behavior-y: none;
   scrollbar-width: none;
 }
 
 .mobile-compare-track::-webkit-scrollbar {
   display: none;
+}
+
+@media (max-width: 767px) {
+  .capability-card {
+    will-change: auto;
+  }
+
+  .capability-card.is-active {
+    transform: none;
+    box-shadow:
+      0 10px 18px rgba(16, 20, 24, 0.1),
+      0 3px 8px rgba(16, 20, 24, 0.06);
+  }
+
+  .capability-card .capability-points {
+    transition:
+      max-height 220ms ease,
+      margin-top 220ms ease,
+      opacity 180ms ease,
+      visibility 180ms ease;
+  }
 }
 
 .capabilities-bg-section {
