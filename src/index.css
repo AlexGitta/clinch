@@ -294,10 +294,10 @@ body {
   opacity: 1;
   overflow: hidden;
   transition:
-    max-height 560ms cubic-bezier(0.22, 0.74, 0.28, 1),
-    margin-top 560ms cubic-bezier(0.22, 0.74, 0.28, 1),
-    opacity 420ms ease,
-    visibility 420ms ease;
+    max-height 620ms cubic-bezier(0.22, 0.74, 0.28, 1),
+    margin-top 620ms cubic-bezier(0.22, 0.74, 0.28, 1),
+    opacity 470ms ease,
+    visibility 470ms ease;
 }
 
 .capability-rail {
@@ -384,9 +384,9 @@ body {
 .mobile-compare-track {
   -webkit-overflow-scrolling: touch;
   overflow-y: hidden;
-  touch-action: pan-x;
+  touch-action: manipulation;
   overscroll-behavior-x: contain;
-  overscroll-behavior-y: none;
+  overscroll-behavior-y: auto;
   scrollbar-width: none;
 }
 
@@ -410,10 +410,10 @@ body {
     will-change: height, transform, box-shadow;
     contain: layout paint;
     transition:
-      height 480ms cubic-bezier(0.2, 0.72, 0.22, 1),
-      transform 360ms cubic-bezier(0.22, 0.66, 0.3, 1),
-      box-shadow 360ms cubic-bezier(0.22, 0.66, 0.3, 1),
-      border-color 360ms ease;
+      height 560ms cubic-bezier(0.2, 0.72, 0.22, 1),
+      transform 430ms cubic-bezier(0.22, 0.66, 0.3, 1),
+      box-shadow 430ms cubic-bezier(0.22, 0.66, 0.3, 1),
+      border-color 430ms ease;
   }
 
   .capability-card.is-active {
@@ -448,8 +448,8 @@ body {
     transform: translate3d(0, 14px, 0) scaleY(0.82);
     transform-origin: bottom center;
     transition:
-      transform 340ms cubic-bezier(0.2, 0.72, 0.2, 1),
-      opacity 280ms ease;
+      transform 420ms cubic-bezier(0.2, 0.72, 0.2, 1),
+      opacity 340ms ease;
     will-change: transform, opacity;
     pointer-events: none;
   }
@@ -457,7 +457,7 @@ body {
   .capability-card.is-active .capability-detail-layer {
     opacity: 1;
     transform: translate3d(0, 0, 0) scaleY(1);
-    transition-delay: 70ms, 45ms;
+    transition-delay: 95ms, 65ms;
     pointer-events: auto;
   }
 
