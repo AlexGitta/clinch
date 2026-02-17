@@ -324,7 +324,7 @@ export default function App() {
     <div className="min-h-screen bg-[var(--surface)] text-[var(--ink)]">
       <AppHeader theme={theme} onToggleTheme={toggleTheme} onNavigate={navigateTo} />
       <main>
-        <section className="w-full pt-6 md:mx-auto md:max-w-[880px] md:px-8 md:pt-10">
+        <section className="w-full pt-0 md:mx-auto md:max-w-[880px] md:px-8 md:pt-10">
           <Reveal>
             <div className="hero-image-shell relative overflow-hidden rounded-none border-y border-[var(--line)] md:rounded-xl md:border lg:-mx-14 xl:-mx-24">
               <img src={heroImage} alt="Two fighters touching fists" className="hero-image h-[270px] w-full object-cover object-center sm:h-[340px] md:h-[430px] lg:h-[500px]" />
