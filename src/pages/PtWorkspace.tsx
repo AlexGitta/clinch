@@ -75,7 +75,25 @@ export default function PtWorkspace({ pt }: { pt: PtProfile }) {
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
-            <div className={`grid grid-cols-2 gap-2 sm:grid-cols-4 ${statsOpen ? "mt-2" : "hidden md:grid"}`}>
+            {/* Mobile: animated collapse */}
+            <div className={`grid overflow-hidden transition-[grid-template-rows] duration-300 ease-in-out md:hidden ${statsOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+              <div className="min-h-0">
+                <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {pt.stats.map((metric) => (
+                    <article key={`${pt.id}-${metric.label}`} className="demo-stat-card p-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">{metric.label}</p>
+                      <p className="mt-1 text-xl font-semibold text-[var(--ink)]">{metric.value}</p>
+                    </article>
+                  ))}
+                  <article className="demo-stat-card p-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">Revenue This Week</p>
+                    <p className="mt-1 text-xl font-semibold text-[var(--ink)]">GBP {revenueThisWeek}</p>
+                  </article>
+                </div>
+              </div>
+            </div>
+            {/* Desktop: always visible */}
+            <div className="mt-2 hidden grid-cols-2 gap-2 sm:grid-cols-4 md:grid">
               {pt.stats.map((metric) => (
                 <article key={`${pt.id}-${metric.label}`} className="demo-stat-card p-3">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">{metric.label}</p>
