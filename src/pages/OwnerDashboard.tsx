@@ -29,6 +29,7 @@ export default function OwnerDashboard({
   const [tab, setTab] = useState<OwnerTab>("schedule");
   const [selectedMember, setSelectedMember] = useState<OwnerMemberRow | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
+  const [scheduleStatsOpen, setScheduleStatsOpen] = useState(false);
 
   const classesByDay = weekDays.map((_, dayIndex) =>
     weeklyClasses
@@ -57,14 +58,36 @@ export default function OwnerDashboard({
       {/* ── Schedule tab ────────────────────────────────────────── */}
       {tab === "schedule" && (
         <div className="mt-4">
-          <div className="grid gap-2 sm:grid-cols-3">
-            <StatCard label="Total Classes This Week" value={String(totalClasses)} />
-            <StatCard label="Average Occupancy" value={`${avgOccupancy}%`} />
-            <StatCard label="Spots Remaining" value={String(spotsRemaining)} />
+          {/* Stats – collapsible on mobile, always visible on desktop */}
+          <div className="mb-4">
+            <button
+              type="button"
+              onClick={() => setScheduleStatsOpen((o) => !o)}
+              className="flex w-full items-center justify-between rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)] md:hidden"
+            >
+              <span>Schedule Stats</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className={`transition-transform duration-200 ${scheduleStatsOpen ? "rotate-180" : ""}`}
+              >
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            <div className={`grid gap-2 sm:grid-cols-3 ${scheduleStatsOpen ? "mt-2" : "hidden md:grid"}`}>
+              <StatCard label="Total Classes This Week" value={String(totalClasses)} />
+              <StatCard label="Average Occupancy" value={`${avgOccupancy}%`} />
+              <StatCard label="Spots Remaining" value={String(spotsRemaining)} />
+            </div>
           </div>
-          <div className="mt-4">
-            <WeeklyCalendar weekDays={weekDays} classesByDay={classesByDay} occupiedStartTimes={occupiedStartTimes} />
-          </div>
+          <WeeklyCalendar weekDays={weekDays} classesByDay={classesByDay} occupiedStartTimes={occupiedStartTimes} />
         </div>
       )}
 
