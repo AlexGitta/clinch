@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   invoices,
   membershipBreakdown,
@@ -30,6 +30,9 @@ export default function OwnerDashboard({
   const [selectedMember, setSelectedMember] = useState<OwnerMemberRow | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
   const [scheduleStatsOpen, setScheduleStatsOpen] = useState(false);
+  const [membersStatsOpen, setMembersStatsOpen] = useState(false);
+  const [ptsStatsOpen, setPtsStatsOpen] = useState(false);
+  const [billingStatsOpen, setBillingStatsOpen] = useState(false);
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior }); }, [tab]);
 
@@ -60,46 +63,13 @@ export default function OwnerDashboard({
       {/* ── Schedule tab ────────────────────────────────────────── */}
       {tab === "schedule" && (
         <div className="mt-4">
-          {/* Stats – collapsible on mobile, always visible on desktop */}
-          <div className="mb-4">
-            <button
-              type="button"
-              onClick={() => setScheduleStatsOpen((o) => !o)}
-              className="flex w-full items-center justify-between rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)] md:hidden"
-            >
-              <span>Schedule Stats</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className={`transition-transform duration-200 ${scheduleStatsOpen ? "rotate-180" : ""}`}
-              >
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </button>
-            {/* Mobile: animated collapse */}
-            <div className={`grid overflow-hidden transition-[grid-template-rows] duration-300 ease-in-out md:hidden ${scheduleStatsOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
-              <div className="min-h-0">
-                <div className="mt-2 grid gap-2 sm:grid-cols-3">
-                  <StatCard label="Total Classes This Week" value={String(totalClasses)} />
-                  <StatCard label="Average Occupancy" value={`${avgOccupancy}%`} />
-                  <StatCard label="Spots Remaining" value={String(spotsRemaining)} />
-                </div>
-              </div>
-            </div>
-            {/* Desktop: always visible */}
-            <div className="mt-2 hidden gap-2 sm:grid-cols-3 md:grid">
+          <CollapsibleStats label="Schedule Stats" open={scheduleStatsOpen} onToggle={() => setScheduleStatsOpen((o) => !o)}>
+            <div className="grid gap-2 sm:grid-cols-3">
               <StatCard label="Total Classes This Week" value={String(totalClasses)} />
               <StatCard label="Average Occupancy" value={`${avgOccupancy}%`} />
               <StatCard label="Spots Remaining" value={String(spotsRemaining)} />
             </div>
-          </div>
+          </CollapsibleStats>
           <WeeklyCalendar weekDays={weekDays} classesByDay={classesByDay} occupiedStartTimes={occupiedStartTimes} />
         </div>
       )}
@@ -107,11 +77,13 @@ export default function OwnerDashboard({
       {/* ── Members tab ─────────────────────────────────────────── */}
       {tab === "members" && (
         <div className="mt-4">
-          <div className="grid gap-2 sm:grid-cols-3">
-            <StatCard label="Active Members" value="184" />
-            <StatCard label="New This Month" value="+6" />
-            <StatCard label="Retention Rate" value="94%" />
-          </div>
+          <CollapsibleStats label="Member Stats" open={membersStatsOpen} onToggle={() => setMembersStatsOpen((o) => !o)}>
+            <div className="grid gap-2 sm:grid-cols-3">
+              <StatCard label="Active Members" value="184" />
+              <StatCard label="New This Month" value="+6" />
+              <StatCard label="Retention Rate" value="94%" />
+            </div>
+          </CollapsibleStats>
 
           <section className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--card)] p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--accent)]">Membership Mix</p>
@@ -190,10 +162,12 @@ export default function OwnerDashboard({
       {/* ── PTs tab ─────────────────────────────────────────────── */}
       {tab === "pts" && (
         <div className="mt-4">
-          <div className="grid gap-2 sm:grid-cols-2">
-            <StatCard label="Active PTs" value="3" />
-            <StatCard label="Avg Utilization" value="76%" />
-          </div>
+          <CollapsibleStats label="PT Stats" open={ptsStatsOpen} onToggle={() => setPtsStatsOpen((o) => !o)}>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <StatCard label="Active PTs" value="3" />
+              <StatCard label="Avg Utilization" value="76%" />
+            </div>
+          </CollapsibleStats>
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             {ptRoster.map((pt) => (
               <PtProfileCard key={pt.id} pt={pt} actionLabel="Open Workspace" onAction={() => onOpenPt(pt.id)} />
@@ -205,11 +179,13 @@ export default function OwnerDashboard({
       {/* ── Billing tab ─────────────────────────────────────────── */}
       {tab === "billing" && (
         <div className="mt-4">
-          <div className="grid gap-2 sm:grid-cols-3">
-            <StatCard label="MRR" value="GBP 12,480" />
-            <StatCard label="Outstanding" value="9" />
-            <StatCard label="Collection Rate" value="97.2%" />
-          </div>
+          <CollapsibleStats label="Billing Stats" open={billingStatsOpen} onToggle={() => setBillingStatsOpen((o) => !o)}>
+            <div className="grid gap-2 sm:grid-cols-3">
+              <StatCard label="MRR" value="GBP 12,480" />
+              <StatCard label="Outstanding" value="9" />
+              <StatCard label="Collection Rate" value="97.2%" />
+            </div>
+          </CollapsibleStats>
 
           {/* Desktop table */}
           <div className="mt-4 hidden overflow-hidden rounded-xl border border-[var(--line)] md:block">
@@ -297,6 +273,27 @@ export default function OwnerDashboard({
         })()}
       </Modal>
     </main>
+  );
+}
+
+function CollapsibleStats({ label, open, onToggle, children }: { label: string; open: boolean; onToggle: () => void; children: ReactNode }) {
+  return (
+    <div className="mb-4">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center justify-between rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)] md:hidden"
+      >
+        <span>{label}</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`}>
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+      <div className={`grid overflow-hidden transition-[grid-template-rows] duration-300 ease-in-out md:hidden ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+        <div className="min-h-0"><div className="mt-2">{children}</div></div>
+      </div>
+      <div className="mt-2 hidden md:block">{children}</div>
+    </div>
   );
 }
 

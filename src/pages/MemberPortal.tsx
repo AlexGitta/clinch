@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   memberProfile,
   ptRoster,
@@ -31,6 +31,8 @@ export default function MemberPortal() {
   const [searchQuery, setSearchQuery] = useState("");
   const [bookingsOpen, setBookingsOpen] = useState(false);
   const { show } = useToast();
+
+  useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior }); }, [tab]);
 
   const classesByDay = weekDays.map((_, dayIndex) =>
     weeklyClasses
@@ -108,7 +110,27 @@ export default function MemberPortal() {
                   </svg>
                 </button>
                 <p className="hidden text-xs font-semibold uppercase tracking-[0.1em] text-[var(--accent)] md:block">My Bookings</p>
-                <div className={`grid gap-1.5 sm:grid-cols-2 ${bookingsOpen ? "mt-2" : "hidden md:grid md:mt-2"}`}>
+                {/* Mobile: animated collapse */}
+                <div className={`grid overflow-hidden transition-[grid-template-rows] duration-300 ease-in-out md:hidden ${bookingsOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+                  <div className="min-h-0">
+                    <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
+                      {bookedClasses.map((cls) => {
+                        const dayLabel = weekDays[cls.day]?.long ?? "";
+                        return (
+                          <div key={`booked-${cls.id}`} className="flex items-center justify-between gap-2 rounded-md border border-green-500/30 bg-green-500/5 px-3 py-2">
+                            <div>
+                              <p className="text-sm font-semibold text-[var(--ink)]">{cls.title}</p>
+                              <p className="text-xs text-[var(--ink-muted)]">{dayLabel} · {cls.start}-{cls.end}</p>
+                            </div>
+                            <button type="button" onClick={() => cancelClassBooking(cls.id)} className="text-[10px] font-semibold uppercase tracking-[0.06em] text-red-500 hover:text-red-600">Cancel</button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+                {/* Desktop: always visible */}
+                <div className="mt-2 hidden gap-1.5 sm:grid-cols-2 md:grid">
                   {bookedClasses.map((cls) => {
                     const dayLabel = weekDays[cls.day]?.long ?? "";
                     return (
@@ -117,13 +139,7 @@ export default function MemberPortal() {
                           <p className="text-sm font-semibold text-[var(--ink)]">{cls.title}</p>
                           <p className="text-xs text-[var(--ink-muted)]">{dayLabel} · {cls.start}-{cls.end}</p>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => cancelClassBooking(cls.id)}
-                          className="text-[10px] font-semibold uppercase tracking-[0.06em] text-red-500 hover:text-red-600"
-                        >
-                          Cancel
-                        </button>
+                        <button type="button" onClick={() => cancelClassBooking(cls.id)} className="text-[10px] font-semibold uppercase tracking-[0.06em] text-red-500 hover:text-red-600">Cancel</button>
                       </div>
                     );
                   })}
