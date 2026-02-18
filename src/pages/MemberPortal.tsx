@@ -212,7 +212,7 @@ export default function MemberPortal() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search trainers..."
-              className="w-full rounded-lg border border-[var(--line)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--ink-muted)] outline-none focus:border-[var(--accent)]"
+              className="w-full rounded-lg border border-[var(--line)] bg-[var(--card)] px-3 py-2 text-base text-[var(--ink)] placeholder:text-[var(--ink-muted)] outline-none focus:border-[var(--accent)] md:text-sm"
             />
             {ptRoster.filter((pt) => {
               if (!searchQuery.trim()) return true;

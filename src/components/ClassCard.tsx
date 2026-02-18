@@ -6,15 +6,20 @@ export default function ClassCard({
   booked,
   onBook,
   compact,
+  session,
 }: {
   cls: WeeklyClass;
   bookable?: boolean;
   booked?: boolean;
   onBook?: () => void;
   compact?: boolean;
+  session?: boolean;
 }) {
   return (
-    <div className={`rounded-md border border-[var(--line)] bg-[var(--card)] ${compact ? "px-2 py-1.5" : "p-3"}`}>
+    <div
+      className={`rounded-md border border-[var(--line)] bg-[var(--card)] ${compact ? "px-2 py-1.5" : "p-3"}`}
+      style={session ? { borderLeftWidth: 3, borderLeftColor: "var(--with-accent)" } : undefined}
+    >
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className={`font-semibold leading-tight text-[var(--ink)] ${compact ? "text-sm" : "text-base"}`}>{cls.title}</p>

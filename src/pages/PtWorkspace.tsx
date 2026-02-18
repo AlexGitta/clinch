@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ptClients, ptSessions, toMinutes, weekDays, weeklyClasses } from "../data/demoData";
 import WeeklyCalendar from "../components/WeeklyCalendar";
 import TabBar from "../components/TabBar";
@@ -17,19 +17,38 @@ export default function PtWorkspace({ pt }: { pt: PtProfile }) {
   const [activeTab, setActiveTab] = useState<PtTab>("schedule");
   const [statsOpen, setStatsOpen] = useState(false);
 
-  const ptClassesByDay = weekDays.map((_, dayIndex) =>
-    weeklyClasses
-      .filter((item) => item.day === dayIndex && item.coach === pt.coach)
-      .sort((left, right) => toMinutes(left.start) - toMinutes(right.start)),
-  );
-  const ptOccupiedTimes = Array.from(
-    new Set(weeklyClasses.filter((c) => c.coach === pt.coach).map((c) => c.start)),
-  ).sort((a, b) => toMinutes(a) - toMinutes(b));
+  useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior }); }, [activeTab]);
 
   const mySessions = ptSessions.filter((s) => s.ptId === pt.id);
   const myClients = ptClients[pt.id] ?? [];
-
   const revenueThisWeek = mySessions.reduce((sum, s) => sum + s.price, 0);
+  const sessionIds = new Set(mySessions.map((s) => s.id));
+
+  // Convert PT sessions to WeeklyClass shape so they appear inline in the calendar
+  const sessionAsClasses = mySessions.map((s) => ({
+    id: s.id,
+    day: s.day,
+    start: s.start,
+    end: s.end,
+    title: s.type,
+    coach: pt.name,
+    booked: 0,
+    capacity: s.spotsLeft,
+    room: "PT Session",
+  }));
+
+  const ptClassesByDay = weekDays.map((_, dayIndex) =>
+    [
+      ...weeklyClasses.filter((item) => item.day === dayIndex && item.coach === pt.coach),
+      ...sessionAsClasses.filter((s) => s.day === dayIndex),
+    ].sort((a, b) => toMinutes(a.start) - toMinutes(b.start)),
+  );
+  const ptOccupiedTimes = Array.from(
+    new Set([
+      ...weeklyClasses.filter((c) => c.coach === pt.coach).map((c) => c.start),
+      ...mySessions.map((s) => s.start),
+    ]),
+  ).sort((a, b) => toMinutes(a) - toMinutes(b));
 
   return (
     <main className="mx-auto w-full max-w-[1280px] px-4 py-5 md:px-8 md:py-7">
@@ -110,31 +129,10 @@ export default function PtWorkspace({ pt }: { pt: PtProfile }) {
           {/* My Schedule */}
           <section className="rounded-xl border border-[var(--line)] bg-[var(--card)] p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--accent)]">My Schedule</p>
-            <p className="mt-1 text-sm text-[var(--ink-muted)]">Classes you coach this week</p>
+            <p className="mt-1 text-sm text-[var(--ink-muted)]">Classes and PT sessions this week</p>
             <div className="mt-3">
-              <WeeklyCalendar weekDays={weekDays} classesByDay={ptClassesByDay} occupiedStartTimes={ptOccupiedTimes} />
+              <WeeklyCalendar weekDays={weekDays} classesByDay={ptClassesByDay} occupiedStartTimes={ptOccupiedTimes} sessionIds={sessionIds} />
             </div>
-            {mySessions.length > 0 && (
-              <>
-                <p className="mt-4 text-xs font-semibold uppercase tracking-[0.1em] text-[var(--ink-muted)]">PT Sessions</p>
-                <div className="mt-2 grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
-                  {mySessions.map((session) => {
-                    const dayLabel = weekDays[session.day]?.long ?? "";
-                    return (
-                      <article
-                        key={session.id}
-                        className="rounded-md border border-[var(--line)] bg-[var(--surface)] px-3 py-2"
-                        style={{ borderLeftWidth: 3, borderLeftColor: "var(--with-accent)" }}
-                      >
-                        <p className="text-sm font-semibold text-[var(--ink)]">{session.type}</p>
-                        <p className="text-xs text-[var(--ink-muted)]">{dayLabel} · {session.start}-{session.end}</p>
-                        <p className="mt-1 text-xs text-[var(--ink-muted)]">{session.spotsLeft} spot{session.spotsLeft !== 1 ? "s" : ""} left · GBP {session.price}</p>
-                      </article>
-                    );
-                  })}
-                </div>
-              </>
-            )}
           </section>
         </div>
       )}
