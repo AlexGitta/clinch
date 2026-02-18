@@ -29,6 +29,7 @@ export default function MemberPortal() {
   const [modalSession, setModalSession] = useState<PtSession | null>(null);
   const [expandedPtId, setExpandedPtId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [bookingsOpen, setBookingsOpen] = useState(false);
   const { show } = useToast();
 
   const classesByDay = weekDays.map((_, dayIndex) =>
@@ -84,8 +85,30 @@ export default function MemberPortal() {
           <div className="mt-4">
             {bookedClasses.length > 0 && (
               <section className="mb-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--accent)]">My Bookings</p>
-                <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
+                {/* Mobile: collapsible; Desktop: always expanded */}
+                <button
+                  type="button"
+                  onClick={() => setBookingsOpen((o) => !o)}
+                  className="flex w-full items-center justify-between rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--accent)] md:hidden"
+                >
+                  <span>My Bookings ({bookedClasses.length})</span>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className={`transition-transform duration-200 ${bookingsOpen ? "rotate-180" : ""}`}
+                  >
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </button>
+                <p className="hidden text-xs font-semibold uppercase tracking-[0.1em] text-[var(--accent)] md:block">My Bookings</p>
+                <div className={`grid gap-1.5 sm:grid-cols-2 ${bookingsOpen ? "mt-2" : "hidden md:grid md:mt-2"}`}>
                   {bookedClasses.map((cls) => {
                     const dayLabel = weekDays[cls.day]?.long ?? "";
                     return (

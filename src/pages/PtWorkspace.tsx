@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ptClients, ptRoster, ptSessions, toMinutes, weekDays, weeklyClasses } from "../data/demoData";
 import WeeklyCalendar from "../components/WeeklyCalendar";
 import type { PtId, PtProfile } from "../types/demo";
@@ -10,6 +11,7 @@ export default function PtWorkspace({
   onOpenPt: (ptId: PtId) => void;
 }) {
   const initials = pt.name.split(" ").map((w) => w[0]).join("").toUpperCase();
+  const [statsOpen, setStatsOpen] = useState(false);
 
   const ptClassesByDay = weekDays.map((_, dayIndex) =>
     weeklyClasses
@@ -56,19 +58,42 @@ export default function PtWorkspace({
         </div>
       </div>
 
-      {/* Stats */}
-      <section className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {pt.stats.map((metric) => (
-          <article key={`${pt.id}-${metric.label}`} className="demo-stat-card p-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">{metric.label}</p>
-            <p className="mt-1 text-xl font-semibold text-[var(--ink)]">{metric.value}</p>
+      {/* Stats – collapsible on mobile, always visible on desktop */}
+      <div className="mt-4">
+        <button
+          type="button"
+          onClick={() => setStatsOpen((o) => !o)}
+          className="flex w-full items-center justify-between rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)] md:hidden"
+        >
+          <span>My Stats</span>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={`transition-transform duration-200 ${statsOpen ? "rotate-180" : ""}`}
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+        <div className={`grid grid-cols-2 gap-2 sm:grid-cols-4 ${statsOpen ? "mt-2" : "hidden md:grid"}`}>
+          {pt.stats.map((metric) => (
+            <article key={`${pt.id}-${metric.label}`} className="demo-stat-card p-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">{metric.label}</p>
+              <p className="mt-1 text-xl font-semibold text-[var(--ink)]">{metric.value}</p>
+            </article>
+          ))}
+          <article className="demo-stat-card p-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">Revenue This Week</p>
+            <p className="mt-1 text-xl font-semibold text-[var(--ink)]">GBP {revenueThisWeek}</p>
           </article>
-        ))}
-        <article className="demo-stat-card p-3">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-[var(--ink-muted)]">Revenue This Week</p>
-          <p className="mt-1 text-xl font-semibold text-[var(--ink)]">GBP {revenueThisWeek}</p>
-        </article>
-      </section>
+        </div>
+      </div>
 
       {/* My Schedule */}
       <section className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--card)] p-4">
