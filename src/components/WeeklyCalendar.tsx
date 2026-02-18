@@ -26,12 +26,14 @@ export default function WeeklyCalendar({
   occupiedStartTimes,
   onClassClick,
   bookedIds,
+  sessionIds,
 }: {
   weekDays: WeekDay[];
   classesByDay: WeeklyClass[][];
   occupiedStartTimes: string[];
   onClassClick?: (cls: WeeklyClass) => void;
   bookedIds?: Set<string>;
+  sessionIds?: Set<string>;
 }) {
   // ── Infinite-scroll state ──────────────────────────────────────────
   const [pagesBefore, setPagesBefore] = useState(1);
@@ -164,6 +166,7 @@ export default function WeeklyCalendar({
                         booked={isBooked}
                         onBook={canBook ? () => onClassClick(item) : undefined}
                         compact
+                        session={sessionIds?.has(item.id)}
                       />
                     );
                   })}
@@ -205,6 +208,7 @@ export default function WeeklyCalendar({
                             key={item.id}
                             className={`demo-calendar-event ${onClassClick ? "cursor-pointer hover:brightness-95" : ""} ${isBooked ? "demo-calendar-event-booked" : ""}`}
                             onClick={onClassClick && !isBooked ? () => onClassClick(item) : undefined}
+                            style={sessionIds?.has(item.id) ? { borderLeftWidth: 3, borderLeftColor: "var(--with-accent)" } : undefined}
                           >
                             <p className="demo-calendar-event-title">{item.title}</p>
                             <p className="demo-calendar-event-meta">{item.start}-{item.end}</p>

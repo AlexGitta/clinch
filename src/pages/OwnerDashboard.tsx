@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   invoices,
   membershipBreakdown,
@@ -30,6 +30,8 @@ export default function OwnerDashboard({
   const [selectedMember, setSelectedMember] = useState<OwnerMemberRow | null>(null);
   const [memberSearch, setMemberSearch] = useState("");
   const [scheduleStatsOpen, setScheduleStatsOpen] = useState(false);
+
+  useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior }); }, [tab]);
 
   const classesByDay = weekDays.map((_, dayIndex) =>
     weeklyClasses
@@ -81,7 +83,18 @@ export default function OwnerDashboard({
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
-            <div className={`grid gap-2 sm:grid-cols-3 ${scheduleStatsOpen ? "mt-2" : "hidden md:grid"}`}>
+            {/* Mobile: animated collapse */}
+            <div className={`grid overflow-hidden transition-[grid-template-rows] duration-300 ease-in-out md:hidden ${scheduleStatsOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+              <div className="min-h-0">
+                <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                  <StatCard label="Total Classes This Week" value={String(totalClasses)} />
+                  <StatCard label="Average Occupancy" value={`${avgOccupancy}%`} />
+                  <StatCard label="Spots Remaining" value={String(spotsRemaining)} />
+                </div>
+              </div>
+            </div>
+            {/* Desktop: always visible */}
+            <div className="mt-2 hidden gap-2 sm:grid-cols-3 md:grid">
               <StatCard label="Total Classes This Week" value={String(totalClasses)} />
               <StatCard label="Average Occupancy" value={`${avgOccupancy}%`} />
               <StatCard label="Spots Remaining" value={String(spotsRemaining)} />
@@ -122,7 +135,7 @@ export default function OwnerDashboard({
             value={memberSearch}
             onChange={(e) => setMemberSearch(e.target.value)}
             placeholder="Search members..."
-            className="mt-4 w-full rounded-lg border border-[var(--line)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--ink)] placeholder:text-[var(--ink-muted)] outline-none focus:border-[var(--accent)]"
+            className="mt-4 w-full rounded-lg border border-[var(--line)] bg-[var(--card)] px-3 py-2 text-base text-[var(--ink)] placeholder:text-[var(--ink-muted)] outline-none focus:border-[var(--accent)] md:text-sm"
           />
 
           {/* Desktop table */}
