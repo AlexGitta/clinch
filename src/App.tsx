@@ -305,7 +305,7 @@ export default function App() {
   if (view === "demo-pt") {
     return (
       <DemoShell theme={theme} view={view} onToggleTheme={toggleTheme} onNavigate={navigateTo} lastPtId={selectedPtId}>
-        <PtWorkspace pt={selectedPt} onOpenPt={openPtWorkspace} />
+        <PtWorkspace pt={selectedPt} />
       </DemoShell>
     );
   }
